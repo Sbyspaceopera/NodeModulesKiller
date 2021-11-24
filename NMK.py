@@ -17,29 +17,41 @@ class bcolors:
     UNDERLINE = "\033[4m"
 
 
-deletedNodeModulesCount = 0
+# Keep the node_modules count
+deletedNodeModulesCount = {"value": 0}
+
+# DRY function
+def delete_node_modules_where(path, deletedNodeModulesCount):
+    if os.path.isabs(path) and os.path.isdir(path):
+        for root, dirs, files in os.walk(path):
+            for name in dirs:
+                if name == "node_modules":
+                    shutil.rmtree(os.path.join(root, name))
+                    print(
+                        f"{bcolors.OKGREEN}[SUCCESS]{bcolors.ENDC}{root}\{name} has been successfully deleted."
+                    )
+                    deletedNodeModulesCount["value"] += 1
+    else:
+        print(
+            f"{bcolors.FAIL}[NMK FAILED]{bcolors.ENDC}: {path} is not a valid or existing absolute path.\n"
+            f"{bcolors.FAIL}[NMK FAILED]{bcolors.ENDC}: Please enter a valid absolute path instead."
+        )
+
+
+# Core code
 if len(sys.argv) == 1:
-    print(
-        f"{bcolors.FAIL}[NMK FAILED]{bcolors.ENDC}: Please enter at least 1 absolute path as an argument when running NMK."
+    path = input(
+        f"{bcolors.OKCYAN}Please enter the absolute path where you want to delete all node_modules :{bcolors.ENDC}\n"
     )
+    delete_node_modules_where(path, deletedNodeModulesCount)
 else:
     paths = sys.argv[1:]
     for path in paths:
-        if os.path.isabs(path) and os.path.isdir(path):
-            for root, dirs in os.walk(path):
-                for name in dirs:
-                    if name == "node_modules":
-                        shutil.rmtree(os.path.join(root, name))
-                        print(
-                            f"{bcolors.OKGREEN}[SUCCESS]{bcolors.ENDC}{root}\{name} has been successfullydeleted."
-                        )
-                        deletedNodeModulesCount += 1
-        else:
-            print(
-                f"{bcolors.FAIL}[NMK FAILED]{bcolors.ENDC}: {path} is not a valid or existing absolute path.\n"
-                f"{bcolors.FAIL}[NMK FAILED]{bcolors.ENDC}: Please enter a valid absolute path instead."
-            )
-    print(f"{bcolors.OKCYAN}JOB DONE!{bcolors.ENDC}")
-    print(
-        f"{bcolors.OKCYAN}{deletedNodeModulesCount} node_modules folders has been deleted.{bcolors.ENDC}"
-    )
+        delete_node_modules_where(path, deletedNodeModulesCount)
+
+finalCount = deletedNodeModulesCount.get("value")
+print(f"{bcolors.OKCYAN}JOB DONE!{bcolors.ENDC}")
+print(
+    f"{bcolors.OKCYAN}{finalCount} node_modules folders has been deleted.{bcolors.ENDC}"
+)
+
